@@ -8,9 +8,16 @@ import '../../dtos/song_dto.dart';
 import 'song_repository.dart';
 
 class SongRepositoryFirebase extends SongRepository {
+  List<Song>? _cachedSongs;
 
   @override
-  Future<List<Song>> fetchSongs() async {
+  Future<List<Song>> fetchSongs({bool forceFetch = false}) async {
+    // 1. Return cache if available
+    if (_cachedSongs!= null && !forceFetch) {
+        return _cachedSongs!;
+    }
+
+    // 2. Otherwise fetch from API
     final Uri songsUriGet = FirebaseConfig.baseUri.replace(path: "/songs.json");
     final http.Response response = await http.get(songsUriGet);
 
@@ -22,6 +29,10 @@ class SongRepositoryFirebase extends SongRepository {
       for (final entry in songJson.entries) {
         result.add(SongDto.fromJson(entry.key, entry.value));
       }
+
+    // 3. Store in memory
+      _cachedSongs = result;
+
       return result;
     } else {
       // 2- Throw expcetion if any issue

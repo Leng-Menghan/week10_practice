@@ -3,17 +3,23 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
  
 import '../../../model/artist/artist.dart';
+import '../../config/firebase_config.dart';
 import '../../dtos/artist_dto.dart';
 import 'artist_repository.dart';
 
 class ArtistRepositoryFirebase implements ArtistRepository {
-  final Uri artistsUri = Uri.https(
-    'week-8-practice-1c0fa-default-rtdb.asia-southeast1.firebasedatabase.app',
-    '/artists.json',
-  );
+  List<Artist>? _cachedArtists;
+
+  final Uri artistsUri = FirebaseConfig.baseUri.replace(path: "artists.json");
 
   @override
-  Future<List<Artist>> fetchArtists() async {
+  Future<List<Artist>> fetchArtists({bool forceFetch = false}) async {
+    // 1. Return cache if available
+    if (_cachedArtists!= null && !forceFetch) {
+        return _cachedArtists!;
+    }
+
+    // 2. Otherwise fetch from API
     final http.Response response = await http.get(artistsUri);
 
     if (response.statusCode == 200) {
@@ -24,6 +30,9 @@ class ArtistRepositoryFirebase implements ArtistRepository {
       for (final entry in songJson.entries) {
         result.add(ArtistDto.fromJson(entry.key, entry.value));
       }
+    // 3. Store in memory
+      _cachedArtists = result;
+
       return result;
     } else {
       // 2- Throw expcetion if any issue

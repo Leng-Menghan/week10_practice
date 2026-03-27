@@ -27,15 +27,18 @@ class LibraryContent extends StatelessWidget {
 
       case AsyncValueState.success:
         List<LibraryItemData> data = asyncValue.data!;
-        content = ListView.builder(
-          itemCount: data.length,
-          itemBuilder: (context, index) => LibraryItemTile(
-            data: data[index],
-            isPlaying: mv.isSongPlaying(data[index].song),
-            onTap: () {
-              mv.start(data[index].song);
-            },
-            onLike: () => mv.like(data[index].song),
+        content = RefreshIndicator(
+          onRefresh: () => mv.fetchSong(forceFetch: true),
+          child: ListView.builder(
+            itemCount: data.length,
+            itemBuilder: (context, index) => LibraryItemTile(
+              data: data[index],
+              isPlaying: mv.isSongPlaying(data[index].song),
+              onTap: () {
+                mv.start(data[index].song);
+              },
+              onLike: () => mv.like(data[index].song),
+            ),
           ),
         );
     }
@@ -46,7 +49,15 @@ class LibraryContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SizedBox(height: 16),
-          Text("Library", style: AppTextStyles.heading),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text("Library", style: AppTextStyles.heading),
+              const SizedBox(width: 20),
+              IconButton(onPressed: () => mv.fetchSong(forceFetch: true), icon: Icon(Icons.refresh))
+            ],
+          ),
           SizedBox(height: 50),
 
           Expanded(child: content),
