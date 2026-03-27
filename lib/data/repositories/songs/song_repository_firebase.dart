@@ -3,18 +3,16 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../../../model/songs/song.dart';
+import '../../config/firebase_config.dart';
 import '../../dtos/song_dto.dart';
 import 'song_repository.dart';
 
 class SongRepositoryFirebase extends SongRepository {
-  final Uri songsUri = Uri.https(
-    'test-a2a77-default-rtdb.asia-southeast1.firebasedatabase.app',
-    '/songs.json',
-  );
 
   @override
   Future<List<Song>> fetchSongs() async {
-    final http.Response response = await http.get(songsUri);
+    final Uri songsUriGet = FirebaseConfig.baseUri.replace(path: "/songs.json");
+    final http.Response response = await http.get(songsUriGet);
 
     if (response.statusCode == 200) {
       // 1 - Send the retrieved list of songs
@@ -33,4 +31,18 @@ class SongRepositoryFirebase extends SongRepository {
 
   @override
   Future<Song?> fetchSongById(String id) async {}
+  
+  @override
+  Future<void> likeSong(String id, int currentLikes) async {
+    final Uri songsUriUpdate = FirebaseConfig.baseUri.replace(path: "/songs/$id.json");
+    final http.Response response = await http.patch(
+      songsUriUpdate,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({"likes": currentLikes.toString()}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to like song");
+    }
+  }
 }
