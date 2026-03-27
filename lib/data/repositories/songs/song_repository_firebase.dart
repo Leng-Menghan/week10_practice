@@ -38,7 +38,7 @@ class SongRepositoryFirebase extends SongRepository {
     final http.Response response = await http.patch(
       songsUriUpdate,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({"likes": currentLikes.toString()}),
+      body: jsonEncode({"likes": currentLikes}),
     );
 
     if (response.statusCode != 200) {
